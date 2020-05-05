@@ -3,6 +3,7 @@ import LoadingDialog from "../prefabs/LoadingDialog";
 import GalleryItemPrefab from "./GalleryItemPrefab";
 import LeftItemPrefab from "./LeftItemPrefab";
 import BottomItemPrefab from "./BottomItemPrefab";
+import FabGridView from "../FabGridView";
 
 const { ccclass, property } = cc._decorator;
 
@@ -29,6 +30,11 @@ export default class ScrollViewEffectRender extends cc.Component {
     @property(LoadingDialog)
     loadingDialog: LoadingDialog = null;
 
+    @property(FabGridView)
+    fabGridViewSv: FabGridView = null;
+    @property(cc.Prefab)
+    fabGridView: cc.Prefab = null;
+
     async start() {
         this.loadingDialog.show();
 
@@ -40,6 +46,10 @@ export default class ScrollViewEffectRender extends cc.Component {
 
         await this.executePreFrame(this._getGalleryItemGenerator(50), 1);
         this.gallerySv.optDc();
+
+
+        await this.executePreFrame(this._fabGridView(50), 1);
+        this.fabGridViewSv.optDc();
 
         this.loadingDialog.hide();
     }
@@ -101,6 +111,22 @@ export default class ScrollViewEffectRender extends cc.Component {
         let itemNode = cc.instantiate(this.leftSvItemPrefab);
         itemNode.parent = this.leftSv.content;
         itemNode.getComponent(LeftItemPrefab).bindData(index);
+    }
+
+    private *_fabGridView(length: number){
+        var dataArray = [];
+        for (let i = 0; i < length; i++) {
+            let itemNode = cc.instantiate(this.gallerySvItemPrefab);
+            itemNode.getComponent(GalleryItemPrefab).bindData(`seed/${i % 12}`);
+            dataArray.push(itemNode);
+        }
+        this.fabGridViewSv.initData(dataArray, "GalleryItemPrefab", function enterVisibleScrollView(index,childNode,itemComponent: GalleryItemPrefab){
+            itemComponent.onEnterSrcollView();
+        },
+        function exitVisibleScrollView(index,childNode,itemComponent: GalleryItemPrefab){
+            itemComponent.onExitScrollView();
+        }
+        );
     }
 
     private *_getGalleryItemGenerator(length: number) {
